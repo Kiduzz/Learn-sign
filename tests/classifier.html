@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Classifier self-test</title>
+<script type="importmap">{ "imports": { "three": "../js/vendor/three.module.min.js" } }</script>
+<style>body{font:15px/1.5 system-ui,sans-serif;margin:24px}.pass{color:#138a4a}.fail{color:#c62f2f}td{padding:2px 10px}</style>
+</head>
+<body>
+<h1 id="sum">Running…</h1>
+<p>Poses the 3D hand in each letter (right and left hand), feeds its 21 landmarks to the checker,
+and expects exactly that letter to be recognised.</p>
+<table id="t"></table>
+<script type="module">
+import * as THREE from 'three';
+import { Hand, getShape, orientation } from '../js/hand.js';
+import { letterOrientation } from '../js/letters.js';
+import { CHECKABLE, check, recognise } from '../js/classifier.js';
+
+let fails = 0;
+const rows = [];
+for (const side of [1, -1]) {
+  const hand = new Hand(side, new THREE.MeshBasicMaterial());
+  const handedness = side > 0 ? 'Right' : 'Left';
+  for (const ch of CHECKABLE) {
+    hand.setShape(getShape(ch));
+    let [d, n] = letterOrientation(ch);
+    if (side < 0) { d = [-d[0], d[1], d[2]]; n = [-n[0], n[1], n[2]]; }
+    hand.root.quaternion.copy(orientation(d, n));
+    const lm = hand.getLandmarks().map((v) => v.toArray());
+    const r = check(ch, lm, { handedness });
+    const rec = recognise(lm, { handedness });
+    const ok = r.match && rec.length === 1 && rec[0] === ch;
+    if (!ok) fails++;
+    rows.push(`<tr class="${ok ? 'pass' : 'fail'}"><td>${handedness}</td><td>${ch}</td><td>${ok ? 'PASS' : 'FAIL'}</td><td>recognised: ${rec.join(', ') || '-'}</td><td>${r.items.filter((i) => !i.ok).map((i) => i.hint).join('; ')}</td></tr>`);
+  }
+}
+document.getElementById('t').innerHTML = rows.join('');
+const sum = document.getElementById('sum');
+sum.textContent = fails ? `${fails} FAILED` : `All ${rows.length} checks passed`;
+sum.className = fails ? 'fail' : 'pass';
+document.title = fails ? 'FAIL' : 'PASS';
+</script>
+</body>
+</html>

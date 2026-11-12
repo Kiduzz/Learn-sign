@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Learn Sign</title>
+  <meta name="description" content="Learn sign language by watching a 3D signer you can slow down, turn around and practise with your camera.">
+  <meta name="theme-color" content="#1d2740">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">{ "imports": { "three": "./js/vendor/three.module.min.js" } }</script>
+</head>
+<body>
+  <a class="skip" href="#panel">Skip to lesson</a>
+  <header class="top">
+    <div class="brand">
+      <img src="assets/icon.svg" alt="" width="34" height="34">
+      <span>Learn&nbsp;Sign</span>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" data-tab="signs" aria-selected="true">Signs</button>
+      <button role="tab" data-tab="alphabet">Alphabet</button>
+      <button role="tab" data-tab="spell">Fingerspell</button>
+      <button role="tab" data-tab="quiz">Quiz</button>
+      <button role="tab" data-tab="practice">Practice</button>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <!-- 3D signer -->
+    <section class="stage" aria-label="3D signer">
+      <div class="viewer" id="viewer">
+        <div class="caption" id="caption" aria-live="polite"></div>
+        <div class="legend" id="legend"><span class="dot r"></span>right hand path <span class="dot l"></span>left hand path</div>
+        <div class="hint-drag">Drag to turn the signer</div>
+      </div>
+      <div class="controls">
+        <div class="row">
+          <button class="btn icon" id="btnPlay" aria-label="Pause">❚❚</button>
+          <button class="btn icon" id="btnReplay" aria-label="Replay">↺</button>
+          <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Position in the sign">
+        </div>
+        <div class="row wrap">
+          <div class="seg" role="group" aria-label="Speed">
+            <span class="seg-label">Speed</span>
+            <button data-speed="0.25">¼</button>
+            <button data-speed="0.5" aria-pressed="true">½</button>
+            <button data-speed="1">1×</button>
+          </div>
+          <div class="seg" role="group" aria-label="Camera view">
+            <span class="seg-label">View</span>
+            <button data-view="front" aria-pressed="true" title="Facing the signer">Front</button>
+            <button data-view="mirror" title="Like a mirror: copy it with the same hand">Mirror</button>
+            <button data-view="signer" title="See it from the signer's eyes">My eyes</button>
+            <button data-view="side" title="From the side">Side</button>
+            <button data-view="hands" title="Close-up on the hands">Close</button>
+          </div>
+          <label class="toggle"><input type="checkbox" id="chkPath" checked> Path</label>
+          <label class="toggle"><input type="checkbox" id="chkLoop" checked> Repeat</label>
+          <label class="toggle skin">Skin
+            <select id="selSkin" aria-label="Signer skin tone">
+              <option value="deep">Deep</option>
+              <option value="brown" selected>Brown</option>
+              <option value="medium">Medium</option>
+              <option value="light">Light</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- lesson panel -->
+    <section class="panel" id="panel" tabindex="-1">
+
+      <div class="tab-pane" data-pane="signs">
+        <div class="pane-head">
+          <h1>Signs</h1>
+          <span class="progress-pill" id="learnedCount"></span>
+        </div>
+        <div class="chips" id="catChips"></div>
+        <input class="search" id="search" type="search" placeholder="Search signs (e.g. water, help)" aria-label="Search signs">
+        <div class="sign-list" id="signList"></div>
+        <article class="detail" id="signDetail" hidden>
+          <div class="detail-top">
+            <img class="shape-img" id="detailShape" alt="">
+            <div>
+              <h2 id="detailGloss"></h2>
+              <p class="english" id="detailEnglish"></p>
+            </div>
+          </div>
+          <dl class="params">
+            <div><dt><span class="pi">✋</span>Handshape</dt><dd id="pHandshape"></dd></div>
+            <div><dt><span class="pi">📍</span>Location</dt><dd id="pLocation"></dd></div>
+            <div><dt><span class="pi">➰</span>Movement</dt><dd id="pMovement"></dd></div>
+            <div><dt><span class="pi">🔄</span>Palm</dt><dd id="pPalm"></dd></div>
+          </dl>
+          <p class="tip" id="detailTip"></p>
+          <div class="row">
+            <button class="btn primary" id="btnLearned">Mark as learned</button>
+            <button class="btn" id="btnNextSign">Next sign →</button>
+          </div>
+        </article>
+      </div>
+
+      <div class="tab-pane" data-pane="alphabet" hidden>
+        <div class="pane-head"><h1>Alphabet</h1></div>
+        <p class="lead">Tap a letter. The signer shows it with the right hand. J and Z move.</p>
+        <div class="letter-info" id="letterInfo" hidden>
+          <span class="big-letter" id="letterBig"></span>
+          <p id="letterText"></p>
+        </div>
+        <div class="letter-grid" id="letterGrid"></div>
+      </div>
+
+      <div class="tab-pane" data-pane="spell" hidden>
+        <div class="pane-head"><h1>Fingerspell</h1></div>
+        <p class="lead">Type a name or word. Watch each letter, one by one.</p>
+        <form class="spell-form" id="spellForm">
+          <input id="spellInput" type="text" maxlength="24" autocomplete="off" placeholder="Your name" aria-label="Word to fingerspell" value="DEAF">
+          <button class="btn primary" type="submit">Spell</button>
+        </form>
+        <div class="chips" id="spellChips"></div>
+        <div class="spell-strip" id="spellStrip" aria-live="polite"></div>
+        <p class="note">Tip: fingerspell names and words that have no sign yet. Keep your hand still beside your shoulder and let the letters flow.</p>
+      </div>
+
+      <div class="tab-pane" data-pane="quiz" hidden>
+        <div class="pane-head">
+          <h1>Quiz</h1>
+          <span class="progress-pill" id="quizScore">0 / 0</span>
+        </div>
+        <div class="seg" role="group" aria-label="Quiz type" id="quizModes">
+          <button data-mode="signs" aria-pressed="true">Signs</button>
+          <button data-mode="letters">Letters</button>
+          <button data-mode="words">Read a word</button>
+        </div>
+        <p class="lead" id="quizPrompt">Watch the signer. What is the sign?</p>
+        <div class="quiz-options" id="quizOptions"></div>
+        <form class="spell-form" id="quizWordForm" hidden>
+          <input id="quizWordInput" type="text" autocomplete="off" placeholder="Type the word" aria-label="Your answer">
+          <button class="btn primary" type="submit">Check</button>
+        </form>
+        <div class="feedback" id="quizFeedback" aria-live="polite"></div>
+        <button class="btn" id="btnQuizNext">Next question →</button>
+      </div>
+
+      <div class="tab-pane" data-pane="practice" hidden>
+        <div class="pane-head"><h1>Practice with camera</h1></div>
+        <p class="lead">Choose a letter, copy the signer, and hold your hand up to the camera. The checklist tells you what to fix.</p>
+        <div class="practice-pick">
+          <label for="practiceLetter">Letter</label>
+          <select id="practiceLetter"></select>
+          <button class="btn" id="btnPracticeNext">Next letter →</button>
+        </div>
+        <div class="cam-wrap" id="camWrap">
+          <video id="camVideo" playsinline muted></video>
+          <canvas id="camCanvas"></canvas>
+          <div class="cam-msg" id="camMsg">
+            <p>Your video stays on this device. Nothing is uploaded.</p>
+            <button class="btn primary" id="btnCamera">Turn on camera</button>
+          </div>
+          <div class="cam-success" id="camSuccess" hidden>✓</div>
+        </div>
+        <div class="hold-bar" aria-hidden="true"><div id="holdFill"></div></div>
+        <ul class="checklist" id="checklist" aria-live="polite"></ul>
+        <p class="note">The checker looks at finger and thumb positions only. It is a helper, not a judge: always learn with a Deaf teacher too.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>Signs shown are common <strong>American Sign Language (ASL)</strong> forms. Signs differ between countries and regions; check with your local Deaf community.</p>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
