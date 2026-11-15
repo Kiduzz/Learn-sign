@@ -43,7 +43,25 @@ Then open <http://localhost:8000>.
 
 The camera practice needs `localhost` or HTTPS, because browsers only allow the camera on secure pages. It also needs an internet connection the first time, to load the MediaPipe hand tracker.
 
-### Publish with GitHub Pages
+### Live site (Cloudflare)
+
+The app is live at **https://learn-sign.legavision.workers.dev**
+
+It runs as a Cloudflare Worker with the whole site packed inside it. To publish an update:
+
+1. Build the Worker file:
+
+   ```bash
+   python3 deploy/build_worker.py
+   ```
+
+2. Deploy it (you need to be logged in to Cloudflare, with `npx wrangler login` or a `CLOUDFLARE_API_TOKEN`):
+
+   ```bash
+   npx wrangler deploy
+   ```
+
+### Publish with GitHub Pages (alternative)
 
 1. Go to *Settings → Pages*.
 2. Under *Build and deployment*, choose **Deploy from a branch**.
